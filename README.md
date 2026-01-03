@@ -4,7 +4,7 @@ Raids people servers
 ## Setup
 1. Install dependencies: The virtual environment is already configured.
 2. Add your Discord bot token to `.env`: `DISCORD_BOT_TOKEN=your_token_here`
-3. Run the bot: `/workspaces/Raid-bot-/.venv/bin/python main.py`
+3. Run the bot: `/workspaces/Raid-bot-/.venv/bin/python bot.py`
 4. Run the dashboard: `/workspaces/Raid-bot-/.venv/bin/python dashboard.py` (access at http://localhost:8080)
 
 ## Dashboard
