@@ -79,6 +79,17 @@ def save_bot_status():
     with open(BOT_STATUS_FILE, 'w') as f:
         json.dump(status, f)
 
+async def status_updater():
+    """Background task to check for status updates from dashboard"""
+    last_status = load_status()
+    while True:
+        await asyncio.sleep(5)  # Check every 5 seconds
+        current_status = load_status()
+        if current_status != last_status:
+            await update_bot_status()
+            last_status = current_status
+            print("Bot status updated automatically from dashboard")
+
 def is_premium(user_id):
     return user_id == BOT_OWNER_ID or user_id in premium_users
 
@@ -185,6 +196,8 @@ async def on_ready():
 \x1b[38;5;172m═══════════════════════════
 ''')
 
+  # Start the status updater background task
+  client.loop.create_task(status_updater())
 
 
 @client.command()
