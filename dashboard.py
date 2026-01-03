@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import os
 import base64
+import json
 
 app = Flask(__name__)
 
@@ -21,8 +22,22 @@ if token:
     except:
         client_id = None
 
+STATUS_FILE = 'status.json'
+
+def load_status():
+    try:
+        with open(STATUS_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return {"name": "Raid Bot", "bio": "Maximum chaos", "activity": "raiding"}
+
+def save_status(data):
+    with open(STATUS_FILE, 'w') as f:
+        json.dump(data, f)
+
 @app.route('/')
 def dashboard():
+    status = load_status()
     commands = [
         'nuke - Nukes the server by deleting channels, creating new ones, banning members, etc.',
         'banall - Bans all members in the server',
@@ -40,7 +55,7 @@ def dashboard():
 
     # Placeholder for dynamic data - in a real implementation, this would fetch from the bot
     servers = "Connected to multiple servers (dynamic data not implemented yet)"
-    status = "Online (assuming bot is running)"
+    bot_status = "Online (assuming bot is running)"
 
     html = f"""
     <!DOCTYPE html>
@@ -138,6 +153,35 @@ def dashboard():
                 color: #ccc;
                 margin-top: 10px;
             }}
+            .form-group {{
+                margin-bottom: 15px;
+            }}
+            .form-group label {{
+                display: block;
+                margin-bottom: 5px;
+                color: #ff4444;
+            }}
+            .form-group input {{
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #555;
+                border-radius: 5px;
+                background: rgba(255,255,255,0.1);
+                color: white;
+            }}
+            .btn {{
+                background: #ff4444;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: background 0.3s;
+            }}
+            .btn:hover {{
+                background: #cc3333;
+            }}
         </style>
     </head>
     <body>
@@ -150,7 +194,7 @@ def dashboard():
             <div class="dashboard-grid">
                 <div class="card">
                     <h2>📊 Status</h2>
-                    <span class="status online">{status}</span>
+                    <span class="status online">{bot_status}</span>
                 </div>
                 
                 <div class="card">
@@ -162,6 +206,25 @@ def dashboard():
                     <h2>🤖 Invite Bot</h2>
                     <p>Add the bot to your Discord server</p>
                     {"<a href='https://discord.com/api/oauth2/authorize?client_id=" + str(client_id) + "&permissions=8&scope=bot' class='invite-btn' target='_blank'>Invite to Server</a>" if client_id else "<p class='note'>Set DISCORD_BOT_TOKEN in .env to enable invites</p>"}
+                </div>
+                
+                <div class="card">
+                    <h2>🎭 Customize Bot</h2>
+                    <form id="statusForm">
+                        <div class="form-group">
+                            <label for="name">Bot Name:</label>
+                            <input type="text" id="name" name="name" value="{status['name']}">
+                        </div>
+                        <div class="form-group">
+                            <label for="bio">Bio/Description:</label>
+                            <input type="text" id="bio" name="bio" value="{status['bio']}">
+                        </div>
+                        <div class="form-group">
+                            <label for="activity">Listening To:</label>
+                            <input type="text" id="activity" name="activity" value="{status['activity']}">
+                        </div>
+                        <button type="submit" class="btn">Update Bot Status</button>
+                    </form>
                 </div>
             </div>
             
@@ -176,12 +239,47 @@ def dashboard():
                 <p>Built with 🔥 for maximum destruction</p>
             </footer>
         </div>
+        
+        <script>
+            document.getElementById('statusForm').addEventListener('submit', async function(e) {{
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+                
+                try {{
+                    const response = await fetch('/update_status', {{
+                        method: 'POST',
+                        headers: {{
+                            'Content-Type': 'application/json',
+                        }},
+                        body: JSON.stringify(data),
+                    }});
+                    
+                    if (response.ok) {{
+                        alert('Bot status updated successfully!');
+                        location.reload();
+                    }} else {{
+                        alert('Failed to update bot status');
+                    }}
+                }} catch (error) {{
+                    alert('Error updating status: ' + error.message);
+                }}
+            }});
+        </script>
     </body>
     </html>
     """
     
     return html
-    return html
+
+@app.route('/update_status', methods=['POST'])
+def update_status():
+    try:
+        data = request.get_json()
+        save_status(data)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

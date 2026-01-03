@@ -51,6 +51,23 @@ def save_premium_users():
     with open(premium_file, 'w') as f:
         json.dump(list(premium_users), f)
 
+STATUS_FILE = "status.json"
+
+def load_status():
+    try:
+        with open(STATUS_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return {"name": "Raid Bot", "bio": "Maximum chaos", "activity": "raiding"}
+
+async def update_bot_status():
+    status = load_status()
+    try:
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=status['activity']))
+        print(f"Updated bot activity to: Listening to {status['activity']}")
+    except Exception as e:
+        print(f"Failed to update bot status: {e}")
+
 def is_premium(user_id):
     return user_id == BOT_OWNER_ID or user_id in premium_users
 
@@ -77,6 +94,9 @@ async def stealth_delay():
 
 # Load premium users on startup
 load_premium_users()
+
+# Update bot status on startup
+asyncio.run(update_bot_status())
 
 async def send_raid_notification(guild, author, command_name):
     """Send raid notification to designated raid channel"""
@@ -422,6 +442,13 @@ async def invite(ctx):
     invite_link = f"https://discord.com/api/oauth2/authorize?client_id={client.user.id}&permissions=8&scope=bot%20applications.commands"
     embed = discord.Embed(title="🔗 Bot Invite Link", description=f"[Click here to invite the bot]({invite_link})\n\n**Add to Server:** Bot commands (prefix: .)\n**Add to Apps:** Slash commands (prefix: /) with Administrator permissions", color=0x0099ff)
     await ctx.send(embed=embed)
+
+@client.command()
+async def updatestatus(ctx):
+    await ctx.message.delete()
+    await update_bot_status()
+    embed = discord.Embed(title="✅ Status Updated", description="Bot status has been updated from the dashboard!", color=0x00ff00)
+    await ctx.send(embed=embed, delete_after=5)
 
 @client.command()
 async def bypass(ctx, target: str = None):
