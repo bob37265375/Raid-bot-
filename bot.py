@@ -68,6 +68,17 @@ async def update_bot_status():
     except Exception as e:
         print(f"Failed to update bot status: {e}")
 
+BOT_STATUS_FILE = "bot_status.json"
+
+def save_bot_status():
+    status = {
+        "servers": len(client.guilds),
+        "online": True,
+        "uptime": "Running"  # Could add actual uptime later
+    }
+    with open(BOT_STATUS_FILE, 'w') as f:
+        json.dump(status, f)
+
 def is_premium(user_id):
     return user_id == BOT_OWNER_ID or user_id in premium_users
 
@@ -148,6 +159,9 @@ webhook_names = ['✟ 𝐓𝐞𝐚𝐦 𝐅𝐑𝐄𝐏 ✟', '2xlul On Top']
 @client.event
 async def on_ready():
   await client.change_presence(activity=discord.Game(name= "imagine getting raided || .gg/VxWaGHHYKA"))#change this if you want
+  
+  # Save bot status for dashboard
+  save_bot_status()
   
   # Sync slash commands
   try:

