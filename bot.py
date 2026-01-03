@@ -67,6 +67,14 @@ async def update_bot_status():
     try:
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=status['activity']))
         print(f"Updated bot activity to: Listening to {status['activity']}")
+        
+        # Update bot username if changed
+        if status.get('name') and status['name'] != client.user.name:
+            try:
+                await client.user.edit(username=status['name'])
+                print(f"Updated bot username to: {status['name']}")
+            except Exception as e:
+                print(f"Failed to update bot username: {e}")
     except Exception as e:
         print(f"Failed to update bot status: {e}")
 
