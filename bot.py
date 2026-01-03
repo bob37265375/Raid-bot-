@@ -65,16 +65,23 @@ def load_status():
 async def update_bot_status():
     status = load_status()
     try:
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=status['activity']))
-        print(f"Updated bot activity to: Listening to {status['activity']}")
-        
-        # Update bot username if changed
-        if status.get('name') and status['name'] != client.user.name:
-            try:
-                await client.user.edit(username=status['name'])
-                print(f"Updated bot username to: {status['name']}")
-            except Exception as e:
-                print(f"Failed to update bot username: {e}")
+        if client.user:
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=status['activity']))
+            print(f"Updated bot activity to: Listening to {status['activity']}")
+            
+            # Update bot username if changed
+            if status.get('name'):
+                print(f"Current username: {client.user.name}, Target username: {status['name']}")
+                if status['name'] != client.user.name:
+                    try:
+                        await client.user.edit(username=status['name'])
+                        print(f"Updated bot username to: {status['name']}")
+                    except Exception as e:
+                        print(f"Failed to update bot username: {e}")
+                else:
+                    print("Username is already correct")
+        else:
+            print("Client user not available yet")
     except Exception as e:
         print(f"Failed to update bot status: {e}")
 
@@ -91,6 +98,7 @@ def save_bot_status():
 
 async def status_updater():
     """Background task to check for status updates from dashboard"""
+    await asyncio.sleep(10)  # Wait 10 seconds for bot to fully initialize
     last_status = load_status()
     while True:
         await asyncio.sleep(5)  # Check every 5 seconds
