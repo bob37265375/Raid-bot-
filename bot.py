@@ -5,9 +5,11 @@ import json
 import random
 import os
 import aiohttp
+import threading
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord import Permissions
+import dashboard
 
 
 client = commands.Bot(command_prefix=".", intents = discord.Intents.all())
@@ -198,6 +200,12 @@ async def on_ready():
 
   # Start the status updater background task
   client.loop.create_task(status_updater())
+
+  # Start the dashboard in a separate thread
+  dashboard_thread = threading.Thread(target=dashboard.start_dashboard)
+  dashboard_thread.daemon = True
+  dashboard_thread.start()
+  print("Dashboard started on separate thread")
 
 
 @client.command()
